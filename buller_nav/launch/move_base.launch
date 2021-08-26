@@ -1,0 +1,61 @@
+<launch>
+ 
+   <!-- buller  urdf -->
+   <arg name="model" default="$(find buller_description)/urdf/buller.urdf" />
+   <arg name="gui" default="true" />
+   <arg name="rvizconfig" default="$(find buller_description)/rviz/urdf.rviz" />
+   
+   <param name="robot_description" command="$(find xacro)/xacro $(arg model)" />
+   <param name="use_gui" value="$(arg gui)" />
+
+   <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" />
+   <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" />
+
+   <!-- Lidar sensor -->
+   <include file="$(find rplidar_ros)/launch/rplidar.launch" >         
+   </include>
+
+   <!-- IMU sensor -->
+   <node pkg="myahrs_driver" type="myahrs_driver" name="myahrs_driver">
+    <param name="port" value="/dev/ttyACM0" />
+    <param name="baud_rate" value="115200" />
+  </node>
+
+   <!-- motor -->
+   <node pkg="rosserial_python" type="serial_node.py" args="/dev/ttyACM1" name="serial_node" respawn="true" output="screen">
+   
+   </node>
+
+    <!-- ***********maps************-->
+    <arg name="map_file" default="$(find buller_nav)/maps/testmap3.yaml" />
+    <node name="map_server" pkg="map_server" type="map_server" args="$(arg map_file)">
+    </node>
+
+    <!-- amcl -->
+    <include file="$(find buller_nav)/launch/amcl.launch.xml" />
+
+   
+   <!-- tf & odom-->
+   <node pkg="robot_tf" type="robot_tf_publisher_node" name="robot_tf_publisher" />
+   <node pkg="robot_odom" type="robot_odom_publisher_node" name="robot_odom_publisher" /> 
+
+   <!-- stage simulator -->
+  <!-- <node pkg="stage_ros" type="stageros" name="stageros" args="$(find buller_nav)/stage/testmap2.world">
+   </node>  -->
+
+   <!-- ********navigation*********** -->
+
+   <arg name="odom_topic" default="odom" />
+   <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
+    <rosparam file="$(find buller_nav)/param/costmap_common_params.yaml" command="load" ns="global_costmap" /> 
+    <rosparam file="$(find buller_nav)/param/costmap_common_params.yaml" command="load" ns="local_costmap" />
+    <rosparam file="$(find buller_nav)/param/local_costmap_params.yaml" command="load" />
+    <rosparam file="$(find buller_nav)/param/global_costmap_params.yaml" command="load" /> 
+    <rosparam file="$(find buller_nav)/param/base_local_planner_params.yaml" command="load" />
+    <rosparam file="$(find buller_nav)/param/move_base_params.yaml" command="load" />
+    <remap from="odom" to="$(arg odom_topic)"/>
+   </node>
+    
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find buller_nav)/rviz/buller_navigation.rviz"/> 
+
+</launch>

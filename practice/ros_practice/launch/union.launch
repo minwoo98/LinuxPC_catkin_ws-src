@@ -1,0 +1,10 @@
+<launch>
+ <group ns="ns1">
+  <node pkg="ros_practice" type="practice_publisher" name="practice_publisher"/>
+  <node pkg="ros_practice" type="practice_subscriber" name="practice_subscriber"/>
+ </group>
+ <group ns="ns2">
+  <node pkg="ros_practice" type="practice_publisher" name="practice_publisher" />
+  <node pkg="ros_practice" type="practice_subscriber" name="practice_subscriber" />
+	</group>
+</launch>
